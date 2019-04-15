@@ -26,45 +26,47 @@ import pl.com.bottega.ecommerce.sales.domain.reservation.Reservation;
 import pl.com.bottega.ecommerce.sales.domain.reservation.ReservationRepository;
 import pl.com.bottega.ecommerce.system.application.SystemContext;
 
+public class AddProductCommandHandler implements CommandHandler<AddProductCommand, Void> {
 
+    private ReservationRepository reservationRepository;
 
-public class AddProductCommandHandler implements CommandHandler<AddProductCommand, Void>{
+    private ProductRepository productRepository;
 
+    private SuggestionService suggestionService;
 
-	private ReservationRepository reservationRepository;
-	
+    private ClientRepository clientRepository;
 
-	private ProductRepository productRepository;
-	
+    private SystemContext systemContext;
 
-	private SuggestionService suggestionService;
-	
+    public AddProductCommandHandler(ReservationRepository reservationRepository, ProductRepository productRepository,
+            SuggestionService suggestionService, ClientRepository clientRepository, SystemContext systemContext) {
+        this.reservationRepository = reservationRepository;
+        this.productRepository = productRepository;
+        this.suggestionService = suggestionService;
+        this.clientRepository = clientRepository;
+        this.systemContext = systemContext;
+    }
 
-	private ClientRepository clientRepository;
-	
+    @Override
+    public Void handle(AddProductCommand command) {
+        Reservation reservation = reservationRepository.load(command.getOrderId());
 
-	private SystemContext systemContext;
-	
-	@Override
-	public Void handle(AddProductCommand command) {
-		Reservation reservation = reservationRepository.load(command.getOrderId());
-		
-		Product product = productRepository.load(command.getProductId());
-		
-		if (! product.isAvailable()){
-			Client client = loadClient();	
-			product = suggestionService.suggestEquivalent(product, client);
-		}
-			
-		reservation.add(product, command.getQuantity());
-		
-		reservationRepository.save(reservation);
-		
-		return null;
-	}
-	
-	private Client loadClient() {
-		return clientRepository.load(systemContext.getSystemUser().getClientId());
-	}
+        Product product = productRepository.load(command.getProductId());
+
+        if (!product.isAvailable()) {
+            Client client = loadClient();
+            product = suggestionService.suggestEquivalent(product, client);
+        }
+
+        reservation.add(product, command.getQuantity());
+
+        reservationRepository.save(reservation);
+
+        return null;
+    }
+
+    private Client loadClient() {
+        return clientRepository.load(systemContext.getSystemUser().getClientId());
+    }
 
 }
