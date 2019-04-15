@@ -105,6 +105,14 @@ public class BookKeeperTest {
         verify(requestItem, times(2)).getTotalCost();
     }
 
+    @Test
+    public void invoiceRequestWithEmptyItemShouldCallCalculateTaxZeroTimes() {
+        when(taxPolicy.calculateTax(any(), any())).thenReturn(new Tax(new Money(100), "10%"));
+        keeper.issuance(invoiceRequest, taxPolicy);
+
+        verify(taxPolicy, times(0)).calculateTax(any(), any());
+    }
+
     private String insignificantName() {
         return "Nowak";
     }
