@@ -72,6 +72,22 @@ public class BookKeeperTest {
         verify(taxPolicy, times(2)).calculateTax(any(), any());
     }
 
+    @Test
+    public void invoiceRequestWithTwoItemsShouldCallProductGetTypeTwice() {
+        when(taxPolicy.calculateTax(any(), any())).thenReturn(new Tax(new Money(10), "10%"));
+        when(taxPolicy.calculateTax(any(), any())).thenReturn(new Tax(new Money(10), "10%"));
+
+        when(product.getType()).thenReturn(ProductType.DRUG);
+        RequestItem requestItem = new RequestItem(product, 1, new Money(100));
+        invoiceRequest.add(requestItem);
+
+        requestItem = new RequestItem(product, 1, new Money(200));
+        invoiceRequest.add(requestItem);
+
+        keeper.issuance(invoiceRequest, taxPolicy);
+        verify(product, times(2)).getType();
+    }
+
     private String insignificantName() {
         return "Nowak";
     }
