@@ -88,6 +88,23 @@ public class BookKeeperTest {
         verify(product, times(2)).getType();
     }
 
+    @Test
+    public void invoiceRequestWithTwoItemsShouldCallGetTotalCostTwice() {
+        when(taxPolicy.calculateTax(any(), any())).thenReturn(new Tax(new Money(10), "10%"));
+
+        when(product.getType()).thenReturn(ProductType.DRUG);
+        RequestItem requestItem = mock(RequestItem.class);
+        when(requestItem.getTotalCost()).thenReturn(new Money(100));
+        when(requestItem.getProductData()).thenReturn(product);
+        when(requestItem.getQuantity()).thenReturn(1);
+
+        invoiceRequest.add(requestItem);
+        invoiceRequest.add(requestItem);
+
+        keeper.issuance(invoiceRequest, taxPolicy);
+        verify(requestItem, times(2)).getTotalCost();
+    }
+
     private String insignificantName() {
         return "Nowak";
     }
