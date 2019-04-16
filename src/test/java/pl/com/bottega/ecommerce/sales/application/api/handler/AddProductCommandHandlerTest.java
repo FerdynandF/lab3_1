@@ -1,5 +1,6 @@
 package pl.com.bottega.ecommerce.sales.application.api.handler;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,10 +13,14 @@ import pl.com.bottega.ecommerce.sales.domain.client.ClientRepository;
 import pl.com.bottega.ecommerce.sales.domain.equivalent.SuggestionService;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.Product;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductRepository;
+import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductType;
 import pl.com.bottega.ecommerce.sales.domain.reservation.Reservation;
 import pl.com.bottega.ecommerce.sales.domain.reservation.ReservationRepository;
+import pl.com.bottega.ecommerce.sharedkernel.Money;
 import pl.com.bottega.ecommerce.system.application.SystemContext;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -40,9 +45,13 @@ public class AddProductCommandHandlerTest {
 
     @Before
     public void initialize() {
-        command = new AddProductCommand(Id.generate(), Id.generate(), 1);
+        command = new AddProductCommand(Id.generate(), new Id("10"), 1);
         Client client = new Client();
+        when(product.getProductType()).thenReturn(ProductType.DRUG);
+        when(product.getPrice()).thenReturn(new Money(100));
+        when(product.getName()).thenReturn("DummyName");
         when(product.isAvailable()).thenReturn(true);
+
         when(reservationRepository.load(any())).thenReturn(reservation);
         when(productRepository.load(any())).thenReturn(product);
         when(suggestionService.suggestEquivalent(product, client)).thenReturn(product);
@@ -72,6 +81,14 @@ public class AddProductCommandHandlerTest {
     public void suggestionServiceMethodShouldNotBeCalled() {
         addProductCommandHandler.handle(command);
         verify(suggestionService, never()).suggestEquivalent(any(Product.class), any(Client.class));
+    }
+
+    @Test
+    public void productRepositoryLoadShouldReturnProperProduct() {
+        addProductCommandHandler.handle(command);
+        Assert.assertThat(productRepository.load(command.getProductId()).getName(), is(equalTo(product.getName())));
+        Assert.assertThat(productRepository.load(command.getProductId()).getPrice(), is(equalTo(product.getPrice())));
+        Assert.assertThat(productRepository.load(command.getProductId()).getProductType(), is(equalTo(product.getProductType())));
     }
 
 }
