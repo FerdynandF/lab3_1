@@ -51,10 +51,16 @@ public class AddProductCommandHandlerTest {
     }
 
     @Test
-    public void reservationRepositoryLoadShouldBeCalledAtLeastOnce() {
+    public void reservationRepositoryLoadShouldBeCalledOnce() {
         command = new AddProductCommand(Id.generate(), Id.generate(), 1);
-        when(reservationRepository.load(Id.generate())).thenReturn(null);
         addProductCommandHandler.handle(command);
         verify(reservationRepository, times(1)).load(any());
+    }
+
+    @Test
+    public void productRepositoryLoadShouldBeCalledOnce() {
+        command = new AddProductCommand(Id.generate(), Id.generate(), 1);
+        addProductCommandHandler.handle(command);
+        verify(productRepository, times(1)).load(any(Id.class));
     }
 }
