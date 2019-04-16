@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.ClientData;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.Id;
 import pl.com.bottega.ecommerce.sales.application.api.command.AddProductCommand;
 import pl.com.bottega.ecommerce.sales.domain.client.Client;
@@ -18,6 +19,8 @@ import pl.com.bottega.ecommerce.sales.domain.reservation.Reservation;
 import pl.com.bottega.ecommerce.sales.domain.reservation.ReservationRepository;
 import pl.com.bottega.ecommerce.sharedkernel.Money;
 import pl.com.bottega.ecommerce.system.application.SystemContext;
+
+import java.util.Date;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -52,6 +55,10 @@ public class AddProductCommandHandlerTest {
         when(product.getName()).thenReturn("DummyName");
         when(product.isAvailable()).thenReturn(true);
 
+        ClientData clientData = new ClientData(Id.generate(), "ClientData1");
+        when(reservation.getClientData()).thenReturn(clientData);
+        when(reservation.getStatus()).thenReturn(Reservation.ReservationStatus.OPENED);
+        when(reservation.getCreateDate()).thenReturn(new Date());
         when(reservationRepository.load(any())).thenReturn(reservation);
         when(productRepository.load(any())).thenReturn(product);
         when(suggestionService.suggestEquivalent(product, client)).thenReturn(product);
@@ -89,6 +96,14 @@ public class AddProductCommandHandlerTest {
         Assert.assertThat(productRepository.load(command.getProductId()).getName(), is(equalTo(product.getName())));
         Assert.assertThat(productRepository.load(command.getProductId()).getPrice(), is(equalTo(product.getPrice())));
         Assert.assertThat(productRepository.load(command.getProductId()).getProductType(), is(equalTo(product.getProductType())));
+    }
+
+    @Test
+    public void reservationRepositoryLoadShouldReturnProperReservation() {
+        addProductCommandHandler.handle(command);
+        Assert.assertThat(reservationRepository.load(command.getOrderId()).getStatus(), is(equalTo(reservation.getStatus())));
+        Assert.assertThat(reservationRepository.load(command.getOrderId()).getClientData(), is(equalTo(reservation.getClientData())));
+        Assert.assertThat(reservationRepository.load(command.getOrderId()).getCreateDate(), is(equalTo(reservation.getCreateDate())));
     }
 
 }
