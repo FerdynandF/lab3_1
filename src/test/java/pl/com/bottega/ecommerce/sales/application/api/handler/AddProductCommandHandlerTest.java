@@ -85,12 +85,6 @@ public class AddProductCommandHandlerTest {
     }
 
     @Test
-    public void suggestionServiceMethodShouldNotBeCalled() {
-        addProductCommandHandler.handle(command);
-        verify(suggestionService, never()).suggestEquivalent(any(Product.class), any(Client.class));
-    }
-
-    @Test
     public void productRepositoryLoadShouldReturnProperProduct() {
         addProductCommandHandler.handle(command);
         Assert.assertThat(productRepository.load(command.getProductId()).getName(), is(equalTo(product.getName())));
