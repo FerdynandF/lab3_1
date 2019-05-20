@@ -26,15 +26,22 @@ import pl.com.bottega.ecommerce.sales.domain.reservation.Reservation;
 import pl.com.bottega.ecommerce.sales.domain.reservation.ReservationRepository;
 import pl.com.bottega.ecommerce.system.application.SystemContext;
 
-public class AddProductCommandHandler implements CommandHandler<AddProductCommand, Void> {
+
+
+public class AddProductCommandHandler implements CommandHandler<AddProductCommand, Void>{
+
 
     private ReservationRepository reservationRepository;
 
+
     private ProductRepository productRepository;
+
 
     private SuggestionService suggestionService;
 
+
     private ClientRepository clientRepository;
+
 
     private SystemContext systemContext;
 
@@ -53,7 +60,7 @@ public class AddProductCommandHandler implements CommandHandler<AddProductComman
 
         Product product = productRepository.load(command.getProductId());
 
-        if (!product.isAvailable()) {
+        if (! product.isAvailable()){
             Client client = loadClient();
             product = suggestionService.suggestEquivalent(product, client);
         }
