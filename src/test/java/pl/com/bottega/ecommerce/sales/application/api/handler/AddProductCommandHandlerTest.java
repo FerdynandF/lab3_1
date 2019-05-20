@@ -19,6 +19,7 @@ import pl.com.bottega.ecommerce.sales.domain.reservation.Reservation;
 import pl.com.bottega.ecommerce.sales.domain.reservation.ReservationRepository;
 import pl.com.bottega.ecommerce.sharedkernel.Money;
 import pl.com.bottega.ecommerce.system.application.SystemContext;
+import pl.com.bottega.ecommerce.system.application.SystemUser;
 
 import java.util.Date;
 
@@ -50,20 +51,21 @@ public class AddProductCommandHandlerTest {
     public void initialize() {
         command = new AddProductCommand(Id.generate(), new Id("10"), 1);
         Client client = new Client();
-        when(product.getProductType()).thenReturn(ProductType.DRUG);
-        when(product.getPrice()).thenReturn(new Money(100));
-        when(product.getName()).thenReturn("DummyName");
-        when(product.isAvailable()).thenReturn(true);
+
+        product = new Product(Id.generate(), new Money(100), "DummyName", ProductType.DRUG);
 
         ClientData clientData = new ClientData(Id.generate(), "ClientData1");
         when(reservation.getClientData()).thenReturn(clientData);
         when(reservation.getStatus()).thenReturn(Reservation.ReservationStatus.OPENED);
         when(reservation.getCreateDate()).thenReturn(new Date());
         when(reservationRepository.load(any())).thenReturn(reservation);
-        when(productRepository.load(any())).thenReturn(product);
-        when(suggestionService.suggestEquivalent(product, client)).thenReturn(product);
+        when(productRepository.load(any(Id.class))).thenReturn(product);
+        when(suggestionService.suggestEquivalent(any(Product.class), any(Client.class))).thenReturn(
+                new Product(Id.generate(), new Money(1), "ProductTest", ProductType.STANDARD));
         addProductCommandHandler = new AddProductCommandHandler(reservationRepository, productRepository, suggestionService,
                 clientRepository, systemContext);
+        when(clientRepository.load(any(Id.class))).thenReturn(new Client());
+        when(systemContext.getSystemUser()).thenReturn(new SystemUser(Id.generate()));
     }
 
     @Test
@@ -98,6 +100,13 @@ public class AddProductCommandHandlerTest {
         Assert.assertThat(reservationRepository.load(command.getOrderId()).getStatus(), is(equalTo(reservation.getStatus())));
         Assert.assertThat(reservationRepository.load(command.getOrderId()).getClientData(), is(equalTo(reservation.getClientData())));
         Assert.assertThat(reservationRepository.load(command.getOrderId()).getCreateDate(), is(equalTo(reservation.getCreateDate())));
+    }
+
+    @Test
+    public void suggestionServiceSuggestEquivalentShouldBeCalledCauseProductNotAvailable() {
+        product.markAsRemoved();
+        addProductCommandHandler.handle(command);
+        verify(suggestionService, times(1)).suggestEquivalent(any(Product.class), any(Client.class));
     }
 
 }
